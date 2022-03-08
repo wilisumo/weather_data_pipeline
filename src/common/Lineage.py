@@ -5,7 +5,8 @@ import datetime
 from typing import Dict, List
 
 from src.common.common_helper import LOGGER
-#from src.common.AWSDynamo import AWSDynamodb
+
+# from src.common.AWSDynamo import AWSDynamodb
 
 
 class Lineage:

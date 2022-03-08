@@ -19,11 +19,11 @@ import pyarrow.parquet as pq
 
 LOGGER = logging.getLogger()
 logging.basicConfig(
-        level=logging.INFO,
-        format="%(levelname)s: %(asctime)s: %(message)s",
-        datefmt="%d-%m-%Y %H:%M:%S",
-        handlers=[logging.StreamHandler()],
-     )
+    level=logging.INFO,
+    format="%(levelname)s: %(asctime)s: %(message)s",
+    datefmt="%d-%m-%Y %H:%M:%S",
+    handlers=[logging.StreamHandler()],
+)
 
 
 def init_env(env: str) -> None:
@@ -32,7 +32,6 @@ def init_env(env: str) -> None:
     :param env: The current running environment (dev, staging, prod)
     """
 
-    
     config = configparser.ConfigParser()
     config.sections()
     config_path = os.path.join(
@@ -55,7 +54,8 @@ def init_env(env: str) -> None:
     os.environ["PROVISION"] = config["json"]["json_provision"]
     os.environ["API_KEY"] = config[env]["API_KEY"]
     os.environ["END_POINT"] = config[env]["end_point"]
-    
+    os.environ["PATH_01"] = config[env]["path_results_q1"]
+    os.environ["PATH_02"] = config[env]["path_results_q2"]
 
 
 def get_last_month():
@@ -188,7 +188,11 @@ def get_s3_parquets(bucket, key):
 
 
 def s3resource():
-    s3resource = boto3.resource("s3")
+    s3resource = boto3.resource(
+        "s3",
+        region_name="us-east-1",
+        endpoint_url=os.environ["LOCALSTACK_ENDPOINT_URL"],
+    )
     return s3resource
 
 
@@ -213,9 +217,13 @@ def remove_empty_from_dict(item):
 
 
 def get_dynamo_instance():
-    
+
     if "dev" in sys.argv[3]:
         LOGGER.info(f"endpoint_url={os.environ['LOCALSTACK_ENDPOINT_URL']}")
-        return boto3.client("dynamodb",region_name="us-east-1", endpoint_url=os.environ["LOCALSTACK_ENDPOINT_URL"])
+        return boto3.client(
+            "dynamodb",
+            region_name="us-east-1",
+            endpoint_url=os.environ["LOCALSTACK_ENDPOINT_URL"],
+        )
     else:
         return boto3.client("dynamodb", region_name="us-east-1")

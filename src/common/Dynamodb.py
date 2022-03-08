@@ -5,11 +5,12 @@ from src.common.common_helper import (
     LOGGER,
 )
 
+
 class Dynamodb(object):
     def __init__(self):
         self.dynamodb = helper.get_dynamo_instance()
-        #self.table = self.dynamodb.Table(table)
-        #self.table_name = table
+        # self.table = self.dynamodb.Table(table)
+        # self.table_name = table
 
     def save(self, item):
         item = remove_empty_from_dict(item)
@@ -34,13 +35,21 @@ class Dynamodb(object):
             ProvisionedThroughput=provisions,
         )
 
-    def write_transaction(self, items, job_id, PK,table_name):
+    def write_transaction(self, items, job_id, PK, table_name):
         try:
             self.dynamodb.transact_write_items(
-                TransactItems=[{'Put':{'TableName': table_name,'Item': val,'ConditionExpression': f'attribute_not_exists({PK})',}} for val in items],
-                ClientRequestToken= job_id
+                TransactItems=[
+                    {
+                        "Put": {
+                            "TableName": table_name,
+                            "Item": val,
+                            "ConditionExpression": f"attribute_not_exists({PK})",
+                        }
+                    }
+                    for val in items
+                ],
+                ClientRequestToken=job_id,
             )
             LOGGER.info("NEW TRANSACTION FINISHED")
         except Exception as e:
             LOGGER.info(e)
-

@@ -22,12 +22,13 @@ from src.common.common_helper import (
     LOGGER,
 )
 
+
 class Store:
     # def __init__(self):
 
-    def store_transaction(self, item, job_id, PK,table):
+    def store_transaction(self, item, job_id, PK, table):
         try:
             dynamo_db = Dynamodb()
-            dynamo_db.write_transaction(item, job_id, PK,table)
+            dynamo_db.write_transaction(item, job_id, PK, table)
         except Exception as e:
             LOGGER.info(f"Exception in Dynamo {e}")

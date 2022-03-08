@@ -6,9 +6,6 @@ ENV LANG=C.UTF-8 \
     WAITFORIT_VERSION="v2.4.1" \
     IN_A_TEST_DOCKER_CONTAINER=True
 
-
-WORKDIR /repo
-
 RUN apt-get update \
     && apt-get install -y groff less curl \
     && pip install --upgrade pip \
@@ -19,11 +16,11 @@ COPY requirements.txt ./
 
 RUN pip install --no-cache-dir --requirement requirements.txt
 
-COPY . ./
+COPY . /app
+
+WORKDIR /app/
+EXPOSE 8080
 
 
-RUN python3 main.py --days=5 --aws_job_id="2021-03-07 22:02:25" --env="dev"
-
-RUN python3 main.py --days=5 --aws_job_id="2021-03-07 22:02:25" --env="dev"
-
-
+CMD ["python3","main.py","--days=5","--aws_job_id","2021-03-09 23:08:59","--env","dev","--job","creation_job"]
+CMD ["python3","main.py","--days=5","--aws_job_id","2021-03-09 23:08:59","--env","dev","--job","ingestion_process_job"]
