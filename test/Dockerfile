@@ -20,3 +20,10 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir --requirement requirements.txt
 
 COPY . ./
+
+
+RUN python3 main.py --days=5 --aws_job_id="2021-03-07 22:02:25" --env="dev"
+
+RUN python3 main.py --days=5 --aws_job_id="2021-03-07 22:02:25" --env="dev"
+
+
