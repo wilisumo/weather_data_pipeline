@@ -1,0 +1,10 @@
+[
+    {
+    "AttributeName": "timezoneloc",
+    "AttributeType": "S"
+    },
+    {
+    "AttributeName": "locationtime",
+    "AttributeType": "S"
+    }
+]

@@ -1,0 +1,8 @@
+awscli
+boto3
+Click
+pandas==1.0.1
+pyarrow==0.16.0
+pytest==5.0.1
+pytest-cov==2.7.1
+s3fs==0.4.2

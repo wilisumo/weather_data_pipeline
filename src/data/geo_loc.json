@@ -1,0 +1,62 @@
+{
+    "Bogota": {
+        "Position": {
+            "Latitude": 4.7110,
+            "Longitude": -74.0721
+        }
+    },
+    "New York": {
+        "Position": {
+            "Latitude": 40.7128,
+            "Longitude": -74.0060
+        }
+    },
+    "Londres": {
+        "Position": {
+            "Latitude": 51.5072,
+            "Longitude": 0.1276
+        }
+    },
+    "San Francisco": {
+        "Position": {
+            "Latitude": 37.7749,
+            "Longitude": -122.4194
+        }
+    },
+    "Los Angeles": {
+        "Position": {
+            "Latitude": 34.0522,
+            "Longitude": -118.2437
+        }
+    },
+    "Mexico D.F": {
+        "Position": {
+            "Latitude": 23.6345,
+            "Longitude": -102.5528
+        }
+    },
+    "Toronto": {
+        "Position": {
+            "Latitude": 43.6532,
+            "Longitude": -79.3832
+        }
+    },
+    "Tokio": {
+        "Position": {
+            "Latitude": 35.6762,
+            "Longitude": 139.6503
+        }
+    },
+    "Delhi": {
+        "Position": {
+            "Latitude": 28.7041,
+            "Longitude": 77.1025
+        }
+    },
+    "Sao Paulo": {
+        "Position": {
+            "Latitude": -23.5558,
+            "Longitude": -46.6396
+        }
+    }
+}

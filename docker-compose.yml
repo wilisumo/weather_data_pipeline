@@ -1,0 +1,30 @@
+version: '3.2'
+
+services:
+
+  localstack:
+    image: localstack/localstack:latest
+    environment: 
+      - SERVICES=s3,dynamodb
+      - EDGE_PORT=4566
+      - DEBUG=1
+      
+    ports:
+       - '4566-4599:4566-4599'
+       - '8055:8080'
+    volumes:
+      - './.localstack:/tmp/localstack'
+      - "/var/run/docker.sock:/var/run/docker.sock"
+  test:
+    build: # To run pytest: docker-compose run test pytest
+      context: .
+      dockerfile: ./test/Dockerfile
+    environment:
+      - AWS_ACCESS_KEY_ID=foo # This is for localstack
+      - AWS_SECRET_ACCESS_KEY=foo
+      - AWS_DEFAULT_REGION=us-east-1
+    depends_on:
+      - localstack
+    links:
+      - localstack:localstack # REQUIRED
+    command: ["sh", "./test/build-test-env.sh"]

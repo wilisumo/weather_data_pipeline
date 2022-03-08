@@ -1,0 +1,10 @@
+[
+    {
+    "AttributeName": "locationtime",
+    "KeyType": "HASH"
+    },
+    {
+    "AttributeName": "timezoneloc",
+    "KeyType": "RANGE"
+    }
+]
