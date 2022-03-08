@@ -32,12 +32,12 @@ docker compose-up
 ```
 
 To execute the process manually
-
+```
 $DAYS = The number of days to be ingested for weather API max 5
 $JOB_ID= the name of the job for Idempotency purpose 
 $ENV= the name of the environment (dev)
 $JOB_NAME= the name of the process to be executed (creation_job, ingestion_process_job)
-
+```
 ```
 python3 main.py --days=$DAYS --aws_job_id=$JOB_ID --env=$ENV --job=$JOB_NAME
 ```
