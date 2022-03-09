@@ -4,10 +4,7 @@ import time
 from decimal import Decimal
 
 # import watchtower
-# from typing import Dict
 import datetime
-
-# from src.common import path_helper
 from src.common.common_helper import init_env, LOGGER, s3resource
 from src.common.Lineage import Lineage
 from src.creation.Creation import Creation
@@ -18,6 +15,15 @@ from src.analize.Analize import Analize
 
 
 def run_job_creation(aws_job_id: str, days) -> None:
+    """
+    run the job ingestion process that access data from a weather API,
+    insert it into a DynamoDB Database, and generate some queries
+    over the data that are exported to a S3 bucket.
+
+    aws_job_id: the job id to be executed
+    days: the number of days of the data to be ingested from the weather API
+
+    """
     try:
         LOGGER.info("Creation Status Running")
         start_time = datetime.datetime.now().time().strftime("%H:%M:%S")
@@ -37,6 +43,7 @@ def run_job_creation(aws_job_id: str, days) -> None:
         )
 
         end_time = datetime.datetime.now().time().strftime("%H:%M:%S")
+        LOGGER.info(f"CREATION FINISH SUCCESSFULLY AT {end_time}")
 
     except Exception as e:
         LOGGER.info("Ingestion status Failed")
@@ -50,6 +57,15 @@ def split_list(lst, n):
 
 
 def run_job_ingestion_process(aws_job_id: str, days) -> None:
+    """
+    run the job ingestion process that access data from a weather API,
+    insert it into a DynamoDB Database, and generate some queries
+    over the data that are exported to a S3 bucket.
+
+    aws_job_id: the job id to be executed
+    days: the number of days of the data to be ingested from the weather API
+
+    """
     try:
         LOGGER.info("Ingestion Status Running")
         start_time = datetime.datetime.now().time().strftime("%H:%M:%S")
@@ -65,161 +81,31 @@ def run_job_ingestion_process(aws_job_id: str, days) -> None:
                 table=os.environ["TABLE_LANDING"],
             )
         analize = Analize()
-        LOGGER.info(type(output_df))
+        path = f"s3://{os.environ['REFINED']+'/'+os.environ['PATH_01']+'/'}"
         result_query = analize.process(
             df=output_df, sql_path=str(os.environ["QUERY_MAX_TEMP_LOC"])
         )
-        LOGGER.info("result query")
-        LOGGER.info(result_query.head())
-        path = f"s3://{os.environ['REFINED']+'/'+os.environ['PATH_01']+'/'}"
-        LOGGER.info(path)
         analize.export(
             df=result_query, s3=s3resource, path=path, partition_cols=["date"]
         )
-
+        result_query_02 = analize.process(
+            df=output_df, sql_path=str(os.environ["QUERY_STATS_DAY"])
+        )
+        path = f"s3://{os.environ['REFINED']+'/'+os.environ['PATH_02']+'/'}"
+        analize.export(
+            df=result_query_02,
+            s3=s3resource,
+            path=path,
+            partition_cols=["locationtime"],
+        )
         end_time = datetime.datetime.now().time().strftime("%H:%M:%S")
+        LOGGER.info(f"PROCESS END TO END FINISH SUCCESSFULLY AT {end_time}")
 
     except Exception as e:
         LOGGER.info("END TO END status Failed")
         LOGGER.error(f"END TO END status Failed {e}")
         LOGGER.info(f"{e}")
         end_time = datetime.datetime.now().time().strftime("%H:%M:%S")
-
-
-def run_job_prep(
-    start_period: str,
-    end_period: str,
-    period: str,
-    sql_context,
-    con_sin_acierta,
-    aws_job_id,
-) -> None:
-    """
-    Run the preparation job
-    :param aws_job_id: the AWS Batch job ID
-    """
-    try:
-        LOGGER.info("Lineage Status Running")
-        start_time = datetime.datetime.now().time().strftime("%H:%M:%S")
-        jobname = "-".join(["preparation", period, aws_job_id])
-        jobnameetoe = "-".join(["endtoend", period, aws_job_id])
-        subprocess = "-".join(["preparation", period])
-        datalineage = Lineage(start_time, None, "1")
-        datalineage.process_table_integration(jobname, "100", None)
-        datalineage.endtoend(jobnameetoe, jobname, "100")
-        LOGGER.info("Initializing preparation process...")
-        # input_paths = path_helper.get_paths_dynamo_pmdt(period)
-        input_paths = path_helper.get_paths(period, start_period, end_period)
-        key_value = {"cu_name": os.environ["USE_CASE"], "job": jobnameetoe}
-        datalineage.updateinputpath(key_value, "p_path_in", "preparation", input_paths)
-        if not input_paths:
-            LOGGER.info("Failed - Missing File...")
-        else:
-            df_pre_mdt, path_premdt = prep_process(
-                input_paths, start_period, end_period, period, sql_context
-            )
-            LOGGER.info("PMDT created")
-            output_path = save_pre_mdt(df_pre_mdt, path_premdt, sql_context)
-            LOGGER.info("Lineage Status Suceeded")
-            end_time = datetime.datetime.now().time().strftime("%H:%M:%S")
-            datalineage = Lineage(start_time, end_time, "1")
-            datalineage.process_table_integration(jobname, "200", "-")
-            LOGGER.info("Inserting table integration finished")
-            datalineage.endtoend(jobnameetoe, jobname, "200")
-            datalineage = Lineage(start_time, end_time, "2")
-            row_numbers = {}
-            for key, value in df_pre_mdt.items():
-                row_numbers[key] = value.shape[0]
-            datalineage.process_table_process(
-                jobname, subprocess, input_paths, output_path, row_numbers
-            )
-            LOGGER.info("Inserting table process finished")
-            LOGGER.info(f"Job {jobnameetoe} {aws_job_id} finished")
-
-    except Exception as e:
-        LOGGER.info("Lineage status Failed")
-        LOGGER.info(f"{e}")
-        end_time = datetime.datetime.now().time().strftime("%H:%M:%S")
-        datalineage = Lineage(start_time, end_time, "1")
-        datalineage.process_table_integration(jobname, "400", f"{e}")
-        datalineage.endtoend(jobnameetoe, jobname, "400")
-
-
-def run_job_scoring(
-    start_period: str,
-    end_period: str,
-    period: str,
-    sql_context,
-    con_sin_acierta,
-    aws_job_id,
-) -> dict:
-    """
-    Run the scoring job
-    :param aws_job_id: the AWS Batch job ID
-    """
-    try:
-        LOGGER.info("Lineage Status Running")
-        start_time = datetime.datetime.now().time().strftime("%H:%M:%S")
-        jobname = "-".join(["scoring", period, aws_job_id])
-        jobnameetoe = "-".join(["endtoend", period, aws_job_id])
-        subprocess = "-".join(["scoring", period])
-        datalineage = Lineage(start_time, None, "1")
-        datalineage.process_table_integration(jobname, "100", None)
-        datalineage.endtoend(jobnameetoe, jobname, "100")
-        LOGGER.info("Initializing scoring process...")
-        period = datetime.datetime.strptime(period, "%Y-%m-%dT%H:%M:%SZ").strftime(
-            "%Y%m%d"
-        )
-        input_paths = path_helper.get_paths_mdt(period, start_period, end_period)
-        key_value = {"cu_name": os.environ["USE_CASE"], "job": jobnameetoe}
-        datalineage.updateinputpath(key_value, "p_path_in", "scoring", input_paths)
-        output_path, n_rows = scoring(
-            input_paths, start_period, end_period, period, sql_context, con_sin_acierta
-        )
-        input_paths = {"mdt": [input_paths]}
-        LOGGER.info("Lineage Status Suceeded")
-        end_time = datetime.datetime.now().time().strftime("%H:%M:%S")
-        datalineage = Lineage(start_time, end_time, "1")
-        datalineage.process_table_integration(jobname, "200", "-")
-        datalineage.endtoend(jobnameetoe, jobname, "200")
-        datalineage = Lineage(start_time, end_time, "2")
-        datalineage.process_table_process(
-            jobname, subprocess, input_paths, output_path["score2"], n_rows
-        )
-        LOGGER.info("Scoring Suceeded")
-        result_message = "finalizado correctamente, se generó el archivo: {}".format(
-            "/".join(output_path["score2"].split("/")[-1:])
-        )
-        path_helper.notify_ses(
-            msg=result_message, start_period=period, type_notify="successful"
-        )
-    except Exception as e:
-        LOGGER.info("Lineage Status Failed")
-        LOGGER.info(f"{e}")
-        end_time = datetime.datetime.now().time().strftime("%H:%M:%S")
-        datalineage = Lineage(start_time, end_time, "1")
-        datalineage.process_table_integration(jobname, "400", f"{e}")
-
-        datalineage.endtoend(jobnameetoe, jobname, "400")
-        path_helper.notify_ses(
-            msg="error de ejecución", start_period=period, type_notify="error"
-        )
-
-
-def run_job_backtesting(
-    start_period: str, end_period: str, period: str, sql_context, con_sin_acierta
-) -> dict:
-    """
-    Run the preparation job
-    :param aws_job_id: the AWS Batch job ID
-    """
-    LOGGER.info("Starting Preparation")
-    files = path_helper.get_paths(period, start_period, end_period)
-    pre_mdt = back_prep_process(files, start_period, end_period, sql_context)
-    LOGGER.info(pre_mdt)
-    LOGGER.info("Starting Scoring")
-    back_scoring(files, start_period, end_period, sql_context, con_sin_acierta)
-    LOGGER.info("end scoring")
 
 
 @click.command()
