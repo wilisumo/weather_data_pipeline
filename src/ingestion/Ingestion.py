@@ -64,7 +64,7 @@ class Ingestion:
             df_weather = pd.DataFrame(hourly_json)
             df_weather["lat"] = json_response.get("lat")
             df_weather["lon"] = json_response.get("lon")
-            df_weather["timezoneloc"] = str(json_response.get("timezone"))
+            df_weather["timezoneloc"] = json_response.get("timezone")
             lst_df.append(df_weather)
             df = pd.concat(lst_df).reset_index()
             df.drop("index", axis=1, inplace=True)
@@ -91,10 +91,7 @@ class Ingestion:
         return out
 
     def clean_duplicates(self, df):
-        # columns = list(set(df.columns) - set(['weather','rain','snow']))
         columns = list(set(df.select_dtypes(["object"]).columns) - set(["timezoneloc"]))
-        LOGGER.info(df.columns)
-        df["timezoneloc"] = str(df["timezoneloc"])
         new_df = self.combine_duplicates(df=df, set_columns=columns)
         new_df["locationtime"] = new_df.dt.apply(
             lambda x: datetime.utcfromtimestamp(x).strftime("%Y-%m-%d %H:%M:%S")
